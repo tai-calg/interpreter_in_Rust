@@ -1,4 +1,4 @@
-use stacktrace::{backtrace::trace, trace};
+
 
 use super::token::{Token, TokenKind};
 
@@ -104,8 +104,9 @@ impl<'a> Lexer<'a> {
                 return ret;
             },
             0x00 => {
+                let ret =  Token::new(TokenKind::EOF,String::from_utf8(vec![self.ch]).unwrap() );
                 self.read_step_char();
-                return Token::new(TokenKind::EOF,String::from_utf8(vec![self.ch]).unwrap() );
+                return ret;
             },
             //TODO
             _ => {
