@@ -1,3 +1,5 @@
+use crate::token;
+
 use super::token::{Token, TokenKind};
 use super::lexer::Lexer;
 use super::ast::*;
@@ -20,8 +22,11 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
 
-    pub fn new() ->Parser<'a> { //mikansei
+    pub fn new(lex:Lexer<'a>) ->Parser<'a> { //mikansei
         return Parser {
+            lex: lex,
+            current_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
+            next_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
         };
     }
     pub fn step_next_token(&mut self) {
@@ -29,24 +34,81 @@ impl<'a> Parser<'a> {
         self.next_token = self.lex.next_token();
     }
 
-    fn parse_program(&mut self) -> Program { //mikansei, 本体
-        return Program;
+    pub fn peek_tokenkind(&self) -> TokenKind {
+        return self.next_token.kind;
+    }
+
+    pub fn parse_program(&mut self) -> Program { //mikansei, 本体
+        let mut program = Program::new();
+
+        while self.current_token.kind != TokenKind::EOF {
+            let stmt = self.parse_statement();
+            if stmt.is_some() {
+                program.statements.push(stmt.unwrap());
+            }
+            self.step_next_token();
+        }
+        return program;
+    }
+
+    fn parse_statement(&mut self)->Option<Statement>{ //matchするだけ。それぞれの処理に分岐。
+        match self.current_token.kind {
+            TokenKind::LET => {
+                return Some(self.parse_let_statement());
+            },
+            TokenKind::RETURN => {
+                return Some(self.parse_return_statement());
+            },
+            _ => {
+                return None;
+            },
+
+        } 
     }
 
     fn parse_identifeir(&mut self)->Identifier {
-        return Identifier;
+        return Identifier{ literal : "".to_string() };//todo
     }
 
-    fn parse_letstatement(&mut self)->Statement {
-        return Statement;
+    /// let x = 5;
+    /// 
+    fn parse_let_statement(&mut self)->Statement {
+        let mut stmt = Statement::new(self.current_token.clone(), StatementKind::LetStatement);
+
+        if self.peek_tokenkind() != TokenKind::IDENT { // x = ... から始まってない
+            dbg!(self.peek_tokenkind());
+            panic!("expected identifier after let");
+        }
+
+        
+        stmt.setid(self.current_token.literal.to_string());
+        
+        self.step_next_token();//?
+
+
+        if self.peek_tokenkind() != TokenKind::EQ { // id の次が = ... ではない
+            dbg!(self.peek_tokenkind());
+            panic!("expected = after identifier");
+        }
+
+        //TODO: expressionを解析する. 今はとりあえずなにもせず最後まですすめている
+        while self.current_token.kind != TokenKind::SEMICOLON {
+            self.step_next_token();
+        }
+            
+        
+        return stmt;
     }
 
+    fn parse_return_statement(&mut self)->Statement {
+        return Statement::new(self.current_token.clone(), StatementKind::ReturnStatement);
+    }
     fn parse_expression(&mut self)->Expression {
-        return Expression;
+        return todo!();
     }
 
     fn parse_oprator_expression(&mut self)->Expression {
-        return Expression;
+        return todo!();
     }
 }
 

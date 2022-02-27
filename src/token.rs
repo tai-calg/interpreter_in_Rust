@@ -10,12 +10,13 @@
 
 #[derive(Debug, PartialEq,Clone)]/*Copyでもいいのでは？　self.nextをcrrentに代入した後すぐにself.nextも書き換えるので　→Stringが入っているのでCopyは不可 */
 pub struct Token {
+
     pub kind: TokenKind,
-    literal: String,
+    pub literal: String,
 }
 
 
-#[derive(Debug, PartialEq,Clone)]
+#[derive(Debug, PartialEq,Clone,Copy)]
 pub enum TokenKind{
     ILLEGAL,
     EOF,
@@ -23,6 +24,7 @@ pub enum TokenKind{
     INT,
 
     EQ,
+    ASSIGN,
     PLUS,
     COMMA,
     SEMICOLON,
@@ -34,6 +36,7 @@ pub enum TokenKind{
     //keyword
     FUNCTION,
     LET,
+    RETURN,
 }
 
 // =================== public impl=================== //
