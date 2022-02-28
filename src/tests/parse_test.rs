@@ -2,8 +2,6 @@
 use super::super::lexer::Lexer;
 #[cfg(test)]
 use super::super::parser::Parser;
-#[cfg(test)]
-use std::io::Write;
 
 
 #[test]
@@ -18,7 +16,6 @@ fn parse_test(){
 
     assert_eq!(program.statements.len(), 3);
     program.statements.iter().for_each(|stmt| {
-        //writeln!(std::io::stderr(), "{:?}", stmt).unwrap(); //cargo test ではprintlnを使えない。
-        println!("{:?}", stmt);
+        println!("{:?}", stmt);//cargo test -- --nocapture としないと、コンソールに出力されない
     });
 }

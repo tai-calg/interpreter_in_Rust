@@ -4,6 +4,7 @@ mod repl;
 mod ast;
 mod parser;
 mod tests;
+mod ast_expr;
 
 fn main() {
 

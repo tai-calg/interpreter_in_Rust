@@ -3,6 +3,7 @@ use crate::token;
 use super::token::{Token, TokenKind};
 use super::lexer::Lexer;
 use super::ast::*;
+use super::ast_expr::*;
 
 // =================== const or static =================== //
 
@@ -66,9 +67,14 @@ impl<'a> Parser<'a> {
         } 
     }
 
+    fn parse_expression(&mut self)->Expression {
+        return todo!();
+    }
+
     fn parse_identifeir(&mut self)->Identifier {
         return Identifier{ literal : "".to_string() };//todo
     }
+
 
     /// let x = 5;
     /// 
@@ -103,9 +109,16 @@ impl<'a> Parser<'a> {
     fn parse_return_statement(&mut self)->Statement {
         return Statement::new(self.current_token.clone(), StatementKind::ReturnStatement);
     }
-    fn parse_expression(&mut self)->Expression {
+
+
+    fn parse_expression_statement(&mut self)->Statement {
         return todo!();
     }
+
+    fn parse_infix_expression(&mut self, left:Expression)->Expression {
+        return todo!();
+    }
+
 
     fn parse_oprator_expression(&mut self)->Expression {
         return todo!();

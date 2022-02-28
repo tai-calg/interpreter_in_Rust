@@ -1,5 +1,5 @@
 use super::token::{Token, TokenKind};
-
+use super::ast_expr::*;
 
 // =================== const or static =================== //
 
@@ -23,6 +23,9 @@ pub struct Statement { //pubにするべき？→すべき。if こっちが外�
 
     typekind : StatementKind,
 }
+
+
+
 #[derive(Debug)]
 pub enum StatementKind {
     LetStatement,
@@ -39,10 +42,6 @@ pub struct Identifier {
     pub literal: String,
 }
 
-#[derive(Debug)]
-pub struct Expression {
-
-}
 
 
 // =================== public object impl=================== //
@@ -72,19 +71,13 @@ impl Statement {
 }
 
 impl Identifier {
-    pub fn new(literal:String)->Identifier {
+    pub fn new(literal_:String)->Identifier {
         return Identifier {
-            literal:literal,
+            literal:literal_,
         };
     }
 }
 
-impl Expression {
-    pub fn new()->Expression {
-        return Expression {
-        };
-    }
-}
 
 
 
