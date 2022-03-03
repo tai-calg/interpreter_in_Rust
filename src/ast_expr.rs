@@ -14,8 +14,11 @@ pub struct ExpressionStatement {
 }
 
 #[derive(Debug)]
-pub struct Expression {
-
+pub enum Expression { //
+    Identifier(String), //Type名(Typeが持つ型)で記述
+    Str(String),  
+    Integer(i64),
+    Boolean(bool),
 }
 
 pub struct  PrefixExpression {
@@ -32,13 +35,6 @@ pub struct InfixExpression {
 
 
 // =================== public object impl=================== //
-
-impl Expression {
-    pub fn new()->Expression {
-        return Expression {
-        };
-    }
-}
 
 
 // ======================================================= //

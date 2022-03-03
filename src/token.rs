@@ -32,11 +32,13 @@ pub enum TokenKind{
     RPAREN,
     LBRACE,
     RBRACE,
+    TRUE,
 
     //keyword
     FUNCTION,
     LET,
     RETURN,
+    STRING
 }
 
 // =================== public impl=================== //

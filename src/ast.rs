@@ -15,12 +15,10 @@ pub struct Program { //statement のキューをするだけ
 
 #[derive(Debug)]
 pub struct Statement { //pubにするべき？→すべき。if こっちが外の入力を受けてmatchする => 共依存になるので。
-//共通変数
-    token:Token,
-    pub id : Identifier, //識別子、演算子など
+//共通変数//
     pub value:Expression,
 
-
+//=====//
     pub typekind : StatementKind,
 }
 
@@ -28,13 +26,13 @@ pub struct Statement { //pubにするべき？→すべき。if こっちが外�
 
 #[derive(Debug,PartialEq, Eq)]
 pub enum StatementKind {
-    LetStatement,
+    LetStatement{
+        id:String,
+    },
     ReturnStatement,
     ExpressionStatement,
 }
-pub struct LetStatement {
 
-}
 
 #[derive(Debug)]
 pub struct Identifier {
@@ -56,19 +54,17 @@ impl Program {
 }
 
 impl Statement {
-    pub fn new(token:Token ,kind : StatementKind)->Statement {
+    pub fn new( stat_kind : StatementKind,  expr_kind:Expression)->Statement {
         return Statement {
-            token:token,
-            id:Identifier::new("".to_string()),
-            value:Expression::new(),
-            typekind:kind,
+            typekind:stat_kind,
+            value:expr_kind,
         };
     }
 
-    pub fn setid(&mut self, literal:String) {
-        self.id = Identifier::new(literal);
-    }
+
 }
+
+
 
 impl Identifier {
     pub fn new(literal_:String)->Identifier {

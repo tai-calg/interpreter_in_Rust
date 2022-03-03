@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::process::Output;
+use std::error::Error;
 
 use crate::token;
 
@@ -7,7 +6,7 @@ use super::token::{Token, TokenKind};
 use super::lexer::Lexer;
 use super::ast::*;
 use super::ast_expr::*;
-
+use super::error::*;
 // =================== const or static =================== //
 
 
@@ -19,10 +18,6 @@ pub struct Parser<'a> {
     lex :Lexer<'a>,
     current_token:Token,
     next_token:Token,
-
-    //what fn are used for each Token?
-    prefix_fns : HashMap<Token,fn()->Expression>,
-    infix_fns : HashMap<Token,fn(Expression)->Expression>,
 }
 
 
@@ -35,8 +30,6 @@ impl<'a> Parser<'a> {
             lex: lex,
             current_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
             next_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
-            prefix_fns: HashMap::new(),   //TODO:
-            infix_fns: HashMap::new(),   //TODO:
         };
     }
     pub fn step_next_token(&mut self) {
@@ -53,60 +46,77 @@ impl<'a> Parser<'a> {
 
         while self.current_token.kind != TokenKind::EOF {
             let stmt = self.parse_statement();
-            if stmt.is_some() {
-                program.statements.push(stmt.unwrap());
-            }
+            //if stmt.is_some() {
+            //    program.statements.push(stmt.unwrap());
+            //}
             self.step_next_token();
         }
         return program;
     }
 
-    fn parse_statement(&mut self)->Option<Statement>{ //matchするだけ。それぞれの処理に分岐。
+    fn parse_statement(&mut self)->Result<Statement,Errors>{ //matchするだけ。それぞれの処理に分岐。
         match self.current_token.kind {
             TokenKind::LET => {
-                return Some(self.parse_let_statement());
+                return Ok(self.parse_let_statement()?);
             },
             TokenKind::RETURN => {
-                return Some(self.parse_return_statement());
+                return Ok(self.parse_return_statement()?);
             },
             _ => {
-                return Some(self.parse_expression_statement());
+                return Ok(self.parse_expression_statement()?);
             },
 
         } 
     }
 
-    fn parse_expression(&mut self)->Expression {
-        return todo!();
+    fn parse_expression(&mut self)->Result<Expression,Errors> {
+        match self.current_token.kind {
+            TokenKind::IDENT => {
+                Ok(Expression::Identifier(self.parse_identifier()?))
+            },
+            TokenKind::STRING => {
+                Ok(Expression::Str(self.parse_string()?))
+            },
+            TokenKind::INT => {
+                Ok(Expression::Integer(self.parse_integer()?))
+            },
+            TokenKind::TRUE => {
+                Ok(Expression::Boolean(true))
+            }
+            _ => {
+                return Err(Errors::TokenInvalid(self.current_token.clone()));
+            }
+        }
     }
 
-    fn parse_identifeir(&mut self)->Identifier {
-        return Identifier{ literal : "".to_string() };//todo
+    fn parse_identifier(&mut self)->Result<String,Errors> {
+        // return Identifier{ literal : "".to_string() };//TODO:
     }
 
-    fn parse_prefix_exprssion(&mut self)->Expression {
-        return todo!();
+    fn parse_string(&mut self)->Result<String,Errors> {
+        // return Identifier{ literal : "".to_string() };//TODO:
     }
-
-    fn parse_infix_expression(&mut self, infix:Expression)->Expression {
-        return todo!();
+    fn parse_integer(&mut self)->Result<i64,Errors> {
+        // return Identifier{ literal : "".to_string() };//TODO:
     }
 
 
     /// let x = 5;
     /// 
-    fn parse_let_statement(&mut self)->Statement {
-        let mut stmt = Statement::new(self.current_token.clone(), StatementKind::LetStatement);
-
+    fn parse_let_statement(&mut self)->Result<Statement,Errors> {
+        
         if self.peek_tokenkind() != TokenKind::IDENT { // x = ... から始まってない
             dbg!(self.peek_tokenkind());
             panic!("expected identifier after let");
         }
-
         
-        stmt.setid(self.current_token.literal.to_string());
         
-        self.step_next_token();//?
+        let mut stmt = Statement::new( 
+            StatementKind::LetStatement{id:self.current_token.literal.to_string()}
+            ,Expression::Identifier("todo".to_string())//TODO:
+            );
+        
+        self.step_next_token();
 
 
         if self.peek_tokenkind() != TokenKind::EQ { // id の次が = ... ではない
@@ -120,32 +130,25 @@ impl<'a> Parser<'a> {
         }
             
         
-        return stmt;
+        return Ok(stmt);
     }
 
-    fn parse_return_statement(&mut self)->Statement {
-        return Statement::new(self.current_token.clone(), StatementKind::ReturnStatement);
+    fn parse_return_statement(&mut self)->Result<Statement,Errors> {
+        return Ok(Statement::new( StatementKind::ReturnStatement));
     }
 
 
-    fn parse_expression_statement(&mut self)->Statement {
-        let mut stmt = Statement::new(self.current_token.clone(), StatementKind::ExpressionStatement);
-        stmt.value = self.parse_expression();
-        return stmt;
+    fn parse_expression_statement(&mut self)->Result<Statement,Errors> {
+        return todo!();
+    }
+
+    fn parse_infix_expression(&mut self, left:Expression)->Expression {
+        return todo!();
     }
 
 
     fn parse_oprator_expression(&mut self)->Expression {
         return todo!();
-    }
-
-    //== register fn == //
-    fn register_prefix(&mut self, token:Token, _fn:fn()->Expression) {
-        self.prefix_fns.insert(token, _fn);
-    }
-
-    fn register_infix(&mut self, token:Token, _fn:fn(Expression)->Expression) {
-        self.infix_fns.insert(token, _fn);
     }
 }
 
