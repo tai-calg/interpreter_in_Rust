@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::process::Output;
+
 use crate::token;
 
 use super::token::{Token, TokenKind};
@@ -16,6 +19,10 @@ pub struct Parser<'a> {
     lex :Lexer<'a>,
     current_token:Token,
     next_token:Token,
+
+    //what fn are used for each Token?
+    prefix_fns : HashMap<Token,fn()->Expression>,
+    infix_fns : HashMap<Token,fn(Expression)->Expression>,
 }
 
 
@@ -28,6 +35,8 @@ impl<'a> Parser<'a> {
             lex: lex,
             current_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
             next_token: Token::new(TokenKind::ILLEGAL, "".to_string()),
+            prefix_fns: HashMap::new(),   //TODO:
+            infix_fns: HashMap::new(),   //TODO:
         };
     }
     pub fn step_next_token(&mut self) {
@@ -61,7 +70,7 @@ impl<'a> Parser<'a> {
                 return Some(self.parse_return_statement());
             },
             _ => {
-                return None;
+                return Some(self.parse_expression_statement());
             },
 
         } 
@@ -73,6 +82,14 @@ impl<'a> Parser<'a> {
 
     fn parse_identifeir(&mut self)->Identifier {
         return Identifier{ literal : "".to_string() };//todo
+    }
+
+    fn parse_prefix_exprssion(&mut self)->Expression {
+        return todo!();
+    }
+
+    fn parse_infix_expression(&mut self, infix:Expression)->Expression {
+        return todo!();
     }
 
 
@@ -112,16 +129,23 @@ impl<'a> Parser<'a> {
 
 
     fn parse_expression_statement(&mut self)->Statement {
-        return todo!();
-    }
-
-    fn parse_infix_expression(&mut self, left:Expression)->Expression {
-        return todo!();
+        let mut stmt = Statement::new(self.current_token.clone(), StatementKind::ExpressionStatement);
+        stmt.value = self.parse_expression();
+        return stmt;
     }
 
 
     fn parse_oprator_expression(&mut self)->Expression {
         return todo!();
+    }
+
+    //== register fn == //
+    fn register_prefix(&mut self, token:Token, _fn:fn()->Expression) {
+        self.prefix_fns.insert(token, _fn);
+    }
+
+    fn register_infix(&mut self, token:Token, _fn:fn(Expression)->Expression) {
+        self.infix_fns.insert(token, _fn);
     }
 }
 

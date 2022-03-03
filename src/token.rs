@@ -8,7 +8,7 @@
 // ======================================================= //
 
 
-#[derive(Debug, PartialEq,Clone)]/*Copyでもいいのでは？　self.nextをcrrentに代入した後すぐにself.nextも書き換えるので　→Stringが入っているのでCopyは不可 */
+#[derive(Debug, PartialEq,Clone,Eq,Hash)]/*Copyでもいいのでは？　self.nextをcrrentに代入した後すぐにself.nextも書き換えるので　→Stringが入っているのでCopyは不可 */
 pub struct Token {
 
     pub kind: TokenKind,
@@ -16,7 +16,7 @@ pub struct Token {
 }
 
 
-#[derive(Debug, PartialEq,Clone,Copy)]
+#[derive(Debug, PartialEq,Clone,Copy,Eq,Hash)]
 pub enum TokenKind{
     ILLEGAL,
     EOF,

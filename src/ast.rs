@@ -17,16 +17,16 @@ pub struct Program { //statement のキューをするだけ
 pub struct Statement { //pubにするべき？→すべき。if こっちが外の入力を受けてmatchする => 共依存になるので。
 //共通変数
     token:Token,
-    id : Identifier, //識別子、演算子など
-    value:Expression,
+    pub id : Identifier, //識別子、演算子など
+    pub value:Expression,
 
 
-    typekind : StatementKind,
+    pub typekind : StatementKind,
 }
 
 
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq, Eq)]
 pub enum StatementKind {
     LetStatement,
     ReturnStatement,
