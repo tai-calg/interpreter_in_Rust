@@ -1,4 +1,4 @@
-
+use super::ast::Precedence;
 // =================== const or static =================== //
 
 
@@ -22,6 +22,7 @@ pub enum TokenKind{
     EOF,
     IDENT, //identifier,識別子, 予約語or変数→lookup_identで変数だけにする
     INT,
+    PREFIX,
 
     EQ,
     ASSIGN,
@@ -38,7 +39,8 @@ pub enum TokenKind{
     FUNCTION,
     LET,
     RETURN,
-    STRING
+    STRING,
+
 }
 
 // =================== public impl=================== //
@@ -51,6 +53,27 @@ impl Token {
             kind,
             literal ,
         }
+    }
+
+
+    pub fn get_precedence(&mut self)->Precedence{
+        match self.kind { /* TODO: fix and extend this*/
+            TokenKind::EQ => Precedence::LOWEST,
+            TokenKind::PLUS => Precedence::LOWEST,
+            TokenKind::SEMICOLON => Precedence::LOWEST,
+            TokenKind::COMMA => Precedence::LOWEST,
+            TokenKind::LPAREN => Precedence::LOWEST,
+            TokenKind::RPAREN => Precedence::LOWEST,
+            TokenKind::LBRACE => Precedence::LOWEST,
+            TokenKind::RBRACE => Precedence::LOWEST,
+            TokenKind::FUNCTION => Precedence::LOWEST,
+            TokenKind::LET => Precedence::LOWEST,
+            TokenKind::RETURN => Precedence::LOWEST,
+            TokenKind::TRUE => Precedence::LOWEST,
+            TokenKind::STRING => Precedence::LOWEST,
+            _ => Precedence::LOWEST,
+        }
+
     }
 
 

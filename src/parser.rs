@@ -5,7 +5,8 @@ use crate::token;
 use super::token::{Token, TokenKind};
 use super::lexer::Lexer;
 use super::ast::*;
-use super::ast_expr::*;
+use super::ast_expr::Expression;
+use super::ast_expr;
 use super::error::*;
 // =================== const or static =================== //
 
@@ -41,17 +42,15 @@ impl<'a> Parser<'a> {
         return self.next_token.kind;
     }
 
-    pub fn parse_program(&mut self) -> Program { //mikansei, 本体
+    pub fn parse_program(&mut self) -> Result<Program,Errors> { //mikansei, 本体
         let mut program = Program::new();
 
         while self.current_token.kind != TokenKind::EOF {
-            let stmt = self.parse_statement();
-            //if stmt.is_some() {
-            //    program.statements.push(stmt.unwrap());
-            //}
+            let stmt = self.parse_statement()?;
+            program.statements.push(stmt);
             self.step_next_token();
         }
-        return program;
+        return Ok(program);
     }
 
     fn parse_statement(&mut self)->Result<Statement,Errors>{ //matchするだけ。それぞれの処理に分岐。
@@ -69,7 +68,7 @@ impl<'a> Parser<'a> {
         } 
     }
 
-    fn parse_expression(&mut self)->Result<Expression,Errors> {
+    fn parse_expression(&mut self,precedence:Precedence)->Result<Expression,Errors> {
         match self.current_token.kind {
             TokenKind::IDENT => {
                 Ok(Expression::Identifier(self.parse_identifier()?))
@@ -82,11 +81,18 @@ impl<'a> Parser<'a> {
             },
             TokenKind::TRUE => {
                 Ok(Expression::Boolean(true))
-            }
+            },
+            TokenKind::PREFIX => {
+                Ok(self.parse_prefix_expression()?)
+            },
             _ => {
-                return Err(Errors::TokenInvalid(self.current_token.clone()));
+                Err(Errors::TokenInvalid(self.current_token.clone()))
             }
         }
+
+
+        //TODO while until ";" &&  precedence < self.next_precedence() {... Kind to Expression by parse_infix_expression()
+
     }
 
     fn parse_identifier(&mut self)->Result<String,Errors> {
@@ -110,11 +116,11 @@ impl<'a> Parser<'a> {
             panic!("expected identifier after let");
         }
         
+        let identifier:Expression = Expression::Identifier(self.current_token.literal.clone());
+        let stmt_expr = self.parse_expression(Precedence::LOWEST)?;
         
-        let mut stmt = Statement::new( 
-            StatementKind::LetStatement{id:self.current_token.literal.to_string()}
-            ,Expression::Identifier("todo".to_string())//TODO:
-            );
+        let mut stmt = Statement::LetStatement{id: identifier,
+        value: stmt_expr};
         
         self.step_next_token();
 
@@ -134,7 +140,8 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self)->Result<Statement,Errors> {
-        return Ok(Statement::new( StatementKind::ReturnStatement));
+        let ret_value = self.parse_expression(Precedence::LOWEST)?;
+        return Ok(Statement::ReturnStatement(ret_value));
     }
 
 
@@ -142,13 +149,55 @@ impl<'a> Parser<'a> {
         return todo!();
     }
 
-    fn parse_infix_expression(&mut self, left:Expression)->Expression {
-        return todo!();
+    fn parse_infix_expression(&mut self, left:Expression)-> Result<Expression,Errors> { //TODO now editing
+        let op = match self.current_token.kind {//TokenKind to String
+            TokenKind::PLUS =>Ok( "+".to_string()),
+            //TODO: extend other patterns
+            _ => Err(Errors::TokenNotOperator(self.current_token.clone())),
+        };
+        
+        self.step_next_token();
+
+        let precedence = self.cur_precedence();
+
+        let right = self.parse_expression(precedence)?;
+
+        let infix_expr = Expression::InfixExpression{
+            left:Box::new(left),
+            operator:op?,
+            right: Box::new(right),
+        };
+
+
+        return Ok(infix_expr);
     }
+
+    fn parse_prefix_expression(&mut self)->Result<Expression,Errors> {
+        let op =self.current_token.literal.to_string();
+        self.step_next_token();
+
+        let right = self.parse_expression(Precedence::PREFIX)?;
+        
+        let prefix_expr = Expression::PrefixExpression{
+            operator:op,
+            right: Box::new(right),
+        };
+
+        return Ok(prefix_expr);
+    }
+
+    
 
 
     fn parse_oprator_expression(&mut self)->Expression {
         return todo!();
+    }
+
+    fn cur_precedence(&self)->Precedence {
+        return self.current_token.get_precedence();
+    }
+    fn next_precedence(&self)->Precedence {
+        return self.next_token.get_precedence();
     }
 }
 

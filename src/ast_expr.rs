@@ -19,19 +19,19 @@ pub enum Expression { //
     Str(String),  
     Integer(i64),
     Boolean(bool),
+    PrefixExpression{
+        operator:String,
+        right:Box<Expression>,
+    },
+    InfixExpression{
+        left:Box<Expression>,
+        operator:String,
+        right:Box<Expression>,
+    },
+
 }
 
-pub struct  PrefixExpression {
-    token:Token,
-    operator:String,
-    right:Expression,
-}
 
-pub struct InfixExpression {
-    token:Token,
-    left:Expression,
-    operator:String,
-}
 
 
 // =================== public object impl=================== //

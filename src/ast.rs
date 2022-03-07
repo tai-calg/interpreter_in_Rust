@@ -3,35 +3,39 @@ use super::ast_expr::*;
 
 // =================== const or static =================== //
 
-
+pub enum Precedence {
+    LOWEST,      
+    EQUALS,       // ==
+    LESSGREATER,  // > or <
+    SUM,          // +
+    PRODUCT,      // *
+    PREFIX,       // -X or !X
+    CALL,         // my_cunction(x){}
+    LBRACKET,     // []
+}
 
 // ======================================================= //
 // =================== public object header =================== //
 // ======================================================= //
 
+#[derive(Debug)]
 pub struct Program { //statement のキューをするだけ
     pub statements:Vec<Statement>,
 }
 
 #[derive(Debug)]
-pub struct Statement { //pubにするべき？→すべき。if こっちが外の入力を受けてmatchする => 共依存になるので。
-//共通変数//
-    pub value:Expression,
-
-//=====//
-    pub typekind : StatementKind,
-}
-
-
-
-#[derive(Debug,PartialEq, Eq)]
-pub enum StatementKind {
+pub enum Statement { 
     LetStatement{
-        id:String,
+        id: Expression,
+        value: Expression,
     },
-    ReturnStatement,
-    ExpressionStatement,
+    ReturnStatement(Expression),
+    ExpressionStatement(Expression),
+    BlockStatement(Vec<Statement>),
+
+
 }
+
 
 
 #[derive(Debug)]
@@ -51,17 +55,6 @@ impl Program {
     }
 
     
-}
-
-impl Statement {
-    pub fn new( stat_kind : StatementKind,  expr_kind:Expression)->Statement {
-        return Statement {
-            typekind:stat_kind,
-            value:expr_kind,
-        };
-    }
-
-
 }
 
 
