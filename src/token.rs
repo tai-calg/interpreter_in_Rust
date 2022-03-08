@@ -8,7 +8,7 @@ use super::ast::Precedence;
 // ======================================================= //
 
 
-#[derive(Debug, PartialEq,Clone,Eq,Hash)]/*Copyでもいいのでは？　self.nextをcrrentに代入した後すぐにself.nextも書き換えるので　→Stringが入っているのでCopyは不可 */
+#[derive(Debug, PartialEq,Clone,Eq,Hash)]/*Copyでもいいのでは？　self.nextをcrrentに代入した後すぐにself.nextも書き換えるので→Stringが入っているのでCopyは不可 */
 pub struct Token {
 
     pub kind: TokenKind,
@@ -34,6 +34,7 @@ pub enum TokenKind{
     LBRACE,
     RBRACE,
     TRUE,
+    FALSE,
 
     //keyword
     FUNCTION,
@@ -56,7 +57,7 @@ impl Token {
     }
 
 
-    pub fn get_precedence(&mut self)->Precedence{
+    pub fn get_precedence(&self)->Precedence{
         match self.kind { /* TODO: fix and extend this*/
             TokenKind::EQ => Precedence::LOWEST,
             TokenKind::PLUS => Precedence::LOWEST,

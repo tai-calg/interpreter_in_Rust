@@ -3,6 +3,7 @@ use super::ast_expr::*;
 
 // =================== const or static =================== //
 
+#[derive(Debug,PartialEq, Eq, PartialOrd)]
 pub enum Precedence {
     LOWEST,      
     EQUALS,       // ==
@@ -12,7 +13,7 @@ pub enum Precedence {
     PREFIX,       // -X or !X
     CALL,         // my_cunction(x){}
     LBRACKET,     // []
-}
+}//下に行くほど優先度が高くなる（enumは比較可能）
 
 // ======================================================= //
 // =================== public object header =================== //
@@ -31,7 +32,7 @@ pub enum Statement {
     },
     ReturnStatement(Expression),
     ExpressionStatement(Expression),
-    BlockStatement(Vec<Statement>),
+    BlockStatement(Vec<Statement>),//fn(){...} {}の中に相当
 
 
 }

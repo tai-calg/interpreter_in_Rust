@@ -8,10 +8,6 @@ use super::token::*;
 // =================== public object header =================== //
 // ======================================================= //
 
-pub struct ExpressionStatement {
-    token:Token,
-    expression:Expression,
-}
 
 #[derive(Debug)]
 pub enum Expression { //

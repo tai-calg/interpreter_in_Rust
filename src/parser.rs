@@ -46,14 +46,14 @@ impl<'a> Parser<'a> {
         let mut program = Program::new();
 
         while self.current_token.kind != TokenKind::EOF {
-            let stmt = self.parse_statement()?;
+            let stmt = self.fork_and_parse_statement()?;
             program.statements.push(stmt);
             self.step_next_token();
         }
         return Ok(program);
     }
 
-    fn parse_statement(&mut self)->Result<Statement,Errors>{ //matchするだけ。それぞれの処理に分岐。
+    fn fork_and_parse_statement(&mut self)->Result<Statement,Errors>{ //matchするだけ。それぞれの処理に分岐。
         match self.current_token.kind {
             TokenKind::LET => {
                 return Ok(self.parse_let_statement()?);
@@ -68,42 +68,66 @@ impl<'a> Parser<'a> {
         } 
     }
 
-    fn parse_expression(&mut self,precedence:Precedence)->Result<Expression,Errors> {
-        match self.current_token.kind {
+    fn fork_and_parse_expression(&mut self,precedence:Precedence)->Result<Expression,Errors> {
+
+        let mut expr = match self.current_token.kind {// Kind to Expression
             TokenKind::IDENT => {
-                Ok(Expression::Identifier(self.parse_identifier()?))
+                Expression::Identifier(self.parse_identifier()?)
             },
             TokenKind::STRING => {
-                Ok(Expression::Str(self.parse_string()?))
+                Expression::Str(self.parse_string()?)
             },
             TokenKind::INT => {
-                Ok(Expression::Integer(self.parse_integer()?))
+                Expression::Integer(self.parse_integer()?)
             },
             TokenKind::TRUE => {
-                Ok(Expression::Boolean(true))
+                Expression::Boolean(true)
+            },
+            TokenKind::FALSE => {
+                Expression::Boolean(false)
             },
             TokenKind::PREFIX => {
-                Ok(self.parse_prefix_expression()?)
+                self.parse_prefix_expression()?
             },
             _ => {
-                Err(Errors::TokenInvalid(self.current_token.clone()))
+                return Err(Errors::TokenInvalid(self.current_token.clone()))
             }
+        };
+
+
+        //DOING while until ";" &&  precedence < self.next_precedence() {... Kind to Expression by parse_infix_expression()
+
+        while TokenKind::SEMICOLON != self.peek_tokenkind() && precedence < self.next_precedence() {
+
+            match self.next_token.kind {
+                TokenKind::PLUS => {
+                    self.step_next_token();
+                    expr = self.parse_infix_expression(expr)?;
+                },
+                //TODO extend patterns
+                _ => {
+                    return Ok(expr);
+                },
+            }
+
+            
         }
+        
+        return Ok(expr);
 
 
-        //TODO while until ";" &&  precedence < self.next_precedence() {... Kind to Expression by parse_infix_expression()
 
     }
 
     fn parse_identifier(&mut self)->Result<String,Errors> {
-        // return Identifier{ literal : "".to_string() };//TODO:
+        return Ok(self.current_token.literal.clone()); 
     }
 
     fn parse_string(&mut self)->Result<String,Errors> {
-        // return Identifier{ literal : "".to_string() };//TODO:
+        return Ok(self.current_token.literal.clone()); 
     }
     fn parse_integer(&mut self)->Result<i64,Errors> {
-        // return Identifier{ literal : "".to_string() };//TODO:
+        return Ok(self.current_token.literal.parse::<i64>().unwrap());
     }
 
 
@@ -117,7 +141,7 @@ impl<'a> Parser<'a> {
         }
         
         let identifier:Expression = Expression::Identifier(self.current_token.literal.clone());
-        let stmt_expr = self.parse_expression(Precedence::LOWEST)?;
+        let stmt_expr = self.fork_and_parse_expression(Precedence::LOWEST)?;
         
         let mut stmt = Statement::LetStatement{id: identifier,
         value: stmt_expr};
@@ -130,7 +154,7 @@ impl<'a> Parser<'a> {
             panic!("expected = after identifier");
         }
 
-        //TODO: expressionを解析する. 今はとりあえずなにもせず最後まですすめている
+        //TODO expressionを解析する. 今はとりあえずなにもせず最後まですすめている
         while self.current_token.kind != TokenKind::SEMICOLON {
             self.step_next_token();
         }
@@ -140,7 +164,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self)->Result<Statement,Errors> {
-        let ret_value = self.parse_expression(Precedence::LOWEST)?;
+        let ret_value = self.fork_and_parse_expression(Precedence::LOWEST)?;
         return Ok(Statement::ReturnStatement(ret_value));
     }
 
@@ -149,10 +173,11 @@ impl<'a> Parser<'a> {
         return todo!();
     }
 
+    //AST treeの中核
     fn parse_infix_expression(&mut self, left:Expression)-> Result<Expression,Errors> { //TODO now editing
         let op = match self.current_token.kind {//TokenKind to String
             TokenKind::PLUS =>Ok( "+".to_string()),
-            //TODO: extend other patterns
+            //TODO extend other patterns
             _ => Err(Errors::TokenNotOperator(self.current_token.clone())),
         };
         
@@ -160,7 +185,7 @@ impl<'a> Parser<'a> {
 
         let precedence = self.cur_precedence();
 
-        let right = self.parse_expression(precedence)?;
+        let right = self.fork_and_parse_expression(precedence)?;
 
         let infix_expr = Expression::InfixExpression{
             left:Box::new(left),
@@ -172,11 +197,12 @@ impl<'a> Parser<'a> {
         return Ok(infix_expr);
     }
 
+    //AST treeの中核
     fn parse_prefix_expression(&mut self)->Result<Expression,Errors> {
         let op =self.current_token.literal.to_string();
         self.step_next_token();
 
-        let right = self.parse_expression(Precedence::PREFIX)?;
+        let right = self.fork_and_parse_expression(Precedence::PREFIX)?;
         
         let prefix_expr = Expression::PrefixExpression{
             operator:op,

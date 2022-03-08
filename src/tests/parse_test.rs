@@ -72,7 +72,10 @@ fn test_op_precedence_parse(){
         let lex = Lexer::new(input);
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
-        let actual =  program.statements[0].value.to_string();//TODO
+        let actual =  match program.statements[0] {
+            Statement::ExpressionStatement(expr) => parser::infix_to_postfix(&expr.expression),
+            _ => panic!("not expression statement"),
+        };//TODO Statement is enum
         assert_eq!(actual, (*expected).to_string());
     });
 }
