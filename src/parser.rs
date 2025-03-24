@@ -169,8 +169,12 @@ impl<'a> Parser<'a> {
     }
 
 
-    fn parse_expression_statement(&mut self)->Result<Statement,Errors> {
-        return todo!();
+    fn parse_expression_statement(&mut self) -> Result<Statement, Errors> {
+        let expr = self.fork_and_parse_expression(Precedence::LOWEST)?;
+        if self.peek_tokenkind() == TokenKind::SEMICOLON {
+            self.step_next_token();
+        }
+        Ok(Statement::ExpressionStatement(expr))
     }
 
     //AST treeの中核
@@ -215,8 +219,31 @@ impl<'a> Parser<'a> {
     
 
 
-    fn parse_oprator_expression(&mut self)->Expression {
-        return todo!();
+    fn parse_operator_expression(&mut self) -> Result<Expression, Errors> {
+        let left = self.fork_and_parse_expression(Precedence::LOWEST)?;
+
+        if self.peek_tokenkind() != TokenKind::SEMICOLON && self.peek_tokenkind() != TokenKind::EOF {
+            let op = match self.next_token.kind {
+                TokenKind::PLUS | TokenKind::MINUS | TokenKind::ASTERISK | TokenKind::SLASH => {
+                    self.step_next_token();
+                    self.current_token.literal.clone()
+                }
+                _ => return Ok(left),
+            };
+
+            self.step_next_token();
+            let right = self.fork_and_parse_expression(Precedence::LOWEST)?;
+
+            let infix_expr = Expression::InfixExpression {
+                left: Box::new(left.clone()),
+                operator: op,
+                right: Box::new(right),
+            };
+
+            return Ok(infix_expr);
+        }
+
+        Ok(left)
     }
 
     fn cur_precedence(&self)->Precedence {
@@ -224,6 +251,50 @@ impl<'a> Parser<'a> {
     }
     fn next_precedence(&self)->Precedence {
         return self.next_token.get_precedence();
+    }
+
+    pub fn infix_to_postfix(&mut self, infix: &str) -> Result<String, Errors> {
+        let mut output = String::new();
+        let mut operators: Vec<&str> = Vec::new();
+
+        for token in infix.split_whitespace() {
+            match token {
+                "+" | "-" | "*" | "/" => {
+                    while let Some(op) = operators.last() {
+                        if self.precedence(op) >= self.precedence(token) {
+                            output.push_str(&format!("{} ", operators.pop().unwrap()));
+                        } else {
+                            break;
+                        }
+                    }
+                    operators.push(token);
+                }
+                "(" => operators.push(token),
+                ")" => {
+                    while let Some(op) = operators.pop() {
+                        if op == "(" {
+                            break;
+                        }
+                        output.push_str(&format!("{} ", op));
+                    }
+                }
+                _ => output.push_str(&format!("{} ", token)),
+            }
+        }
+
+        while let Some(op) = operators.pop() {
+            output.push_str(&format!("{} ", op));
+        }
+
+        Ok(output.trim().to_string())
+    }
+
+    fn precedence(&self, op: &str) -> u8 {
+        match op {
+            "+" | "-" => 1,
+            "*" | "/" => 2,
+            _ => 0,
+        }
     }
 }
 

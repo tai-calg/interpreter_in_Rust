@@ -1,7 +1,7 @@
 #[cfg(test)]
 use super::super::lexer::Lexer;
 #[cfg(test)]
-use super::super::parser::Parser;
+use super::super::parser::{self, Parser};
 #[cfg(test)]
 use super::super::ast::*;
 
@@ -20,8 +20,9 @@ fn parse_test(){
     //}
 
     if program.is_ok(){
-        assert_eq!(program.unwrap().statements.len(), 3);
-        program.unwrap().statements.iter().for_each(|stmt| {
+        let prog = program.unwrap();
+        assert_eq!(prog.statements.len(), 3);
+        prog.statements.iter().for_each(|stmt| {
             println!("{:?}", stmt);//"  cargo test -- --nocapture  " としないと、コンソールに出力されない
         });
 
@@ -43,7 +44,7 @@ fn test_identifier_expr(){
 
 #[test]
 fn test_op_precedence_parse(){
-    let tests = vec![
+    let tests: Vec<(&str, &str)> = vec![
         ("-a * b", "((-a) * b)"),
         ("!-a", "(!(-a))"),
         ("a + b + c", "((a + b) + c)"),
@@ -72,10 +73,10 @@ fn test_op_precedence_parse(){
         let lex = Lexer::new(input);
         let mut parser = Parser::new(lex);
         let program = parser.parse_program().unwrap();
-        let actual =  match program.statements[0] {
-            Statement::ExpressionStatement(expr) => parser::infix_to_postfix(&expr.expression),
+        let actual = match program.statements[0] {
+            Statement::ExpressionStatement(ref expr) => parser.infix_to_postfix(&expr.to_string()).unwrap(),
             _ => panic!("not expression statement"),
-        };//TODO Statement is enum
+        };
         assert_eq!(actual, (*expected).to_string());
     });
 }

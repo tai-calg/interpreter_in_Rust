@@ -14,7 +14,9 @@ pub fn start(input:&str) {
         let tok = lex.next_token();
         dbg!(&tok); //tokentype, literalどちらも表示
         if tok.kind == TokenKind::EOF {
-            break;
+            break;           
+
+
         }
     }
 }
